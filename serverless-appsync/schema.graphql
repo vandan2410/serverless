@@ -1,0 +1,36 @@
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+type Query {
+    readEmployee: [Get!]!
+}
+
+type Mutation {
+    createEmployee(id: Int!, name: String!, role: String!): Save
+    updateEmployee(id: Int!, name: String!, role: String!): Update
+    deleteEmployee(id: Int!): Delete
+}
+
+type Get {
+    id: Int!
+    name: String
+    role: String 
+}
+
+type Save {
+    id: Int!
+    name: String
+    role: String 
+}
+
+type Update {
+    id: Int!
+    name: String
+    role: String 
+}
+
+type Delete {
+    id: Int! 
+}

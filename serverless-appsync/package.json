@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.515.0",
+    "serverless-appsync-plugin": "^2.7.0"
+  }
+}

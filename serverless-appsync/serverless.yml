@@ -1,0 +1,78 @@
+service: serverless-appsync
+frameworkVersion: "3"
+
+custom:
+  tableName: 'employeeTable'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: dev
+  region: us-east-2
+  lambdaHashingVersion: 20201221
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:BatchGetItem
+        - dynamodb:BatchWriteItem
+        - dynamodb:DeleteItem
+        - appsync:GraphQL
+        - appsync:UpdateGraphqlApi
+        - appsync:CreateDataSource
+        - appsync:CreateFunction
+        - appsync:CreateResolver
+        - appsync:UpdateDataSource
+        - appsync:UpdateFunction
+        - appsync:UpdateResolver
+      Resource: "*"
+
+functions:
+  employeeMutation:
+    handler: handler.handler
+    environment:
+      EMPLOYEE_TABLE_NAME: !Ref EmployeeTable
+
+resources:
+  Resources:
+    AppSyncApi:
+      Type: AWS::AppSync::GraphQLApi
+      Properties:
+        Name: appsync-employee-apis-demo
+        AuthenticationType: API_KEY
+    
+    EmployeeMutationLambdaFunction:  # Define the Lambda function as a resource
+      Type: AWS::Lambda::Function
+      Properties:
+        Handler: handler.handler
+        Runtime: nodejs20.x
+        Environment:
+          Variables:
+            EMPLOYEE_TABLE_NAME: !Ref EmployeeTable
+
+    AppSyncDataSource:
+      Type: AWS::AppSync::DataSource
+      Properties:
+        ApiId: !GetAtt AppSyncApi.ApiId
+        Name: employeeMutation
+        Type: AWS_LAMBDA
+        LambdaConfig:
+          LambdaFunctionArn: !GetAtt EmployeeMutationLambdaFunction.Arn
+        ServiceRoleArn: "arn:aws:iam::780214660285:role/AppSyncrole" # Replace with your IAM role ARN
+      DependsOn: EmployeeMutationLambdaFunction
+      
+
+    EmployeeTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: N
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tableName}
